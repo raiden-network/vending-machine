@@ -30,18 +30,18 @@ def contract_params(request):
 @pytest.fixture()
 def get_contract(chain, create_contract):
     def get(arguments, transaction=None):
-        Contract = chain.provider.get_contract_factory('SimpleExchange')
+        Contract = chain.provider.get_contract_factory('VendingMachine')
         contract = create_contract(
-            SimpleExchange,
+            VendingMachine,
             arguments,
             transaction
         )
 
         if print_the_logs:
-            print_logs(uraiden_contract, 'Setup', 'SimpleExchange')
-            print_logs(uraiden_contract, 'Fund', 'SimpleExchange')
-            print_logs(uraiden_contract, 'Buy', 'SimpleExchange')
-            print_logs(uraiden_contract, 'WithdrawTokens', 'SimpleExchange')
+            print_logs(uraiden_contract, 'Setup', 'VendingMachine')
+            print_logs(uraiden_contract, 'Fund', 'VendingMachine')
+            print_logs(uraiden_contract, 'Buy', 'VendingMachine')
+            print_logs(uraiden_contract, 'WithdrawTokens', 'VendingMachine')
 
         return contract
     return get
