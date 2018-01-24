@@ -57,6 +57,24 @@ contract VendingMachine {
         buy(msg.sender);
     }
 
+    function tokenFallback(address _sender_address, uint256 _deposit, bytes _data) external {
+        require(_deposit > 0);
+
+        // Make sure we trust the token
+        require(msg.sender == address(token));
+
+        // Make sure only the trusted wallet sends tokens
+        require(_sender_address == wallet_address);
+
+        Fund(_deposit);
+    }
+
+    function withdrawTokens() external isWallet {
+        uint256 contract_balance = token.balanceOf(address(this));
+        require(token.transfer(wallet_address, contract_balance));
+        WithdrawTokens(contract_balance);
+    }
+
     function setup(uint256 _wei_per_token) public isOwner {
         require(_wei_per_token > 0);
         wei_per_token = _wei_per_token;
@@ -74,24 +92,6 @@ contract VendingMachine {
         require(token.transfer(_buyer, token_fractions));
 
         Buy(_buyer, msg.value, token_fractions);
-    }
-
-    function tokenFallback(address _sender_address, uint256 _deposit, bytes _data) external {
-        require(_deposit > 0);
-
-        // Make sure we trust the token
-        require(msg.sender == address(token));
-
-        // Make sure only the trusted wallet sends tokens
-        require(_sender_address == wallet_address);
-
-        Fund(uint256 _deposit);
-    }
-
-    function withdrawTokens() external isWallet {
-        uint256 contract_balance = token.balanceOf(address(this));
-        require(token.transfer(wallet_address, contract_balance));
-        WithdrawTokens(contract_balance);
     }
 
     /// @dev Check if a contract exists.
