@@ -86,8 +86,6 @@ contract VendingMachine {
 
         uint256 token_fractions = msg.value * token_multiplier / wei_per_token;
 
-        require(token_fractions <= token.balanceOf(address(this)));
-
         wallet_address.transfer(msg.value);
         require(token.transfer(_buyer, token_fractions));
 
