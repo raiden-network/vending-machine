@@ -78,7 +78,7 @@ def checkSetupEvent(wei_per_token):
     return get
 
 
-def checkBuyEvent(buyer, value, wei_per_token):
+def checkBuyEvent(buyer, value, token_fractions):
     def get(event):
         assert event['args']['_buyer'] == buyer
         assert event['args']['_value'] == value

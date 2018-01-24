@@ -58,3 +58,8 @@ def test_setup_event(owner, contract, event_handler):
     txn_hash = contract.transact({'from': owner}).setup(10)
     ev_handler.add(txn_hash, contract_events['setup'], checkSetupEvent(10))
     ev_handler.check()
+
+
+def test_setup_print_gas_cost(owner, contract, print_gas):
+    txn_hash = contract.transact({'from': owner}).setup(10)
+    print_gas(txn_hash, 'setup')

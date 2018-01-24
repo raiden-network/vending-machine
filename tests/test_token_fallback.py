@@ -45,3 +45,8 @@ def test_token_fallback_event(owner, wallet, token, contract, event_handler):
 
     ev_handler.add(txn_hash, contract_events['fund'], checkFundEvent(1000))
     ev_handler.check()
+
+
+def test_token_fallback_print_gas_cost(wallet, token, contract, print_gas):
+    txn_hash = token.transact({'from': wallet}).transfer(contract.address, 10 ** 20, encode_hex(bytearray()))
+    print_gas(txn_hash, 'fund contract with 100 TKN')

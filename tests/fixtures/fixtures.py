@@ -100,9 +100,9 @@ def get_token_contract(chain, create_contract):
 
 
 @pytest.fixture
-def txn_cost(web3, txnGas):
+def txn_cost(web3, txn_gas):
     def get(txn_hash):
-        return txnGas(txn_hash) * web3.eth.gasPrice
+        return txn_gas(txn_hash) * web3.eth.gasPrice
     return get
 
 

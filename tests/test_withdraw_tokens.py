@@ -25,11 +25,19 @@ def test_withdraw_state(owner, wallet, token, funded_contract):
     assert token.call().balanceOf(owner) == owner_pre_balance
 
 
-def test_withdraw_tokens_event(owner, wallet, token, contract, event_handler):
-    ev_handler = event_handler(contract)
+def test_withdraw_tokens_event(owner, wallet, token, funded_contract, event_handler):
+    ev_handler = event_handler(funded_contract)
 
-    balance = token.call().balanceOf(contract.address)
-    txn_hash = contract.transact({'from': wallet}).withdrawTokens()
+    balance = token.call().balanceOf(funded_contract.address)
+    assert balance > 0
+    txn_hash = funded_contract.transact({'from': wallet}).withdrawTokens()
 
     ev_handler.add(txn_hash, contract_events['withdraw'], checkWithdrawTokensEvent(balance))
     ev_handler.check()
+
+
+def test_withdraw_tokens_print_gas_cost(wallet, token, funded_contract, print_gas):
+    balance = token.call().balanceOf(funded_contract.address)
+    assert balance > 0
+    txn_hash = funded_contract.transact({'from': wallet}).withdrawTokens()
+    print_gas(txn_hash, 'withdraw {} TKN'.format(balance / 10 ** 18))
