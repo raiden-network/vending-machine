@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Vending Machine</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script src="web3.min.js"></script>
+  <style>
+    input[type="number"] {
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="jumbotron">
+    <h2>
+      Your ETH balance: <strong class="eth-bal">0</strong> <small>ETH</small>
+    </h2>
+    <h2>
+      Your <span class="tkn-symbol">TKN</span> balance: <strong class="tkn-bal">0</strong> <small class="tkn-symbol">TKN</small>
+    </h2>
+    <h2>
+      Price: <strong class="price">0</strong> <small>ETH/<span class="tkn-symbol"></span></small>
+    </h2>
+    <div class="form-inline">
+      <div class="input-group">
+        <input type="number" class="form-control" id="eth-value" placeholder="ETH" step="0.00000001" min="0">
+        <span class="input-group-addon">ETH</span>
+      </div>
+      <strong>=</strong>
+      <div class="input-group">
+        <input type="number" class="form-control" id="tkn-value" placeholder="Token" step="0.01" min="0">
+        <span class="input-group-addon tkn-symbol">TKN</span>
+      </div>
+      <button type="submit" class="btn btn-default" id="tkn-buy">Buy</button>
+    </div>
+  </div>
+</div>
+
+<script>
+$.when(
+  $.getJSON('contracts.json'),
+  $.getJSON('config.json'),
+  $.ready
+).then(function(contractsResponse, configResponse) {
+  web3 = new Web3(web3.currentProvider);
+
+  window.contracts = contractsResponse[0];
+  window.config = configResponse[0];
+  window.vending = web3.eth.contract(contracts['VendingMachine'].abi).at(config['contractAddr']);
+
+  vending.token.call(function(err, addr) {
+    if (err) return console.log(err);
+    config['tokenAddr'] = addr;
+    window.token = web3.eth.contract(contracts['CustomToken'].abi).at(addr);
+    token.symbol.call(function(err, symbol) {
+      if (err) return console.log(err);
+      config['tokenSymbol'] = symbol;
+      $('.tkn-symbol').text(symbol);
+    });
+    token.decimals.call(function(err, decimals) {
+      if (err) return console.log(err);
+      config['tokenDecimals'] = decimals.toNumber();
+      updateBalances();
+      setInterval(updateBalances, 2e3);
+    });
+  });
+
+  function updateBalances() {
+    web3.eth.getAccounts(function(err, accounts) {
+      web3.eth.getBalance(accounts[0], function(err, balance) {
+        if (err) return console.log(err);
+        $('.eth-bal').text(balance.shift(-18).toPrecision(7));
+      });
+      token.balanceOf(accounts[0], function(err, balance) {
+        if (err) return console.log(err);
+        $('.tkn-bal').text(balance.shift(-config['tokenDecimals']).toPrecision(7));
+      })
+    });
+  }
+
+  $('#eth-value').on('input', function(evt) {
+    $('#tkn-value').val(web3.toBigNumber(evt.target.value).div(config['price']).round(18));
+  });
+  $('#tkn-value').on('input', function(evt) {
+    $('#eth-value').val(web3.toBigNumber(evt.target.value).mul(config['price']).round(18));
+  });
+
+  vending.wei_per_token.call(function(err, price) {
+    if (err) return console.log(err);
+    config['price'] = web3.fromWei(price, 'ether');
+    $('.price').text(config['price'].toString());
+    $('#tkn-value').val(1).trigger('input');
+  });
+
+  $('#tkn-buy').click(function() {
+    var eth = web3.toBigNumber($('#eth-value').val()),
+        wei = web3.toWei(eth, 'ether');
+    web3.eth.sendTransaction({to: vending.address, value: wei}, function(err, txHash) {
+      if (err) return console.log(err);
+      console.log('Transaction sent', txHash);
+      var intervalId = setInterval(function() {
+        web3.eth.getTransactionReceipt(txHash, function(err, receipt) {
+          if (err) return console.log(err);
+          if (!receipt || !receipt.blockNumber) return console.log('Waiting tx');
+          console.log('Transaction mined', receipt.blockNumber);
+          clearInterval(intervalId);
+          window.alert('Transaction mined at block '+receipt.blockNumber);
+        });
+      }, 2e3);
+    });
+  });
+});
+</script>
+</body>
+</html>
