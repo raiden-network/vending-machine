@@ -1,4 +1,7 @@
-#
+# Vending Machine
+
+! Contract code has not been audited yet and it is work-in-progress. Not recommended to be used in production.
+
 ### Prerequisites
 
  * Python 3.6
